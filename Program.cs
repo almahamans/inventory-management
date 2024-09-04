@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -21,8 +22,7 @@ class Item{
         Console.WriteLine($"Name: {Name}, Quantity: {Quantity}, Create Date: {Date} ");
     }
 }
-public enum SortType{
-    
+public enum SortType{ 
     asc,
     desc
 }
@@ -52,7 +52,6 @@ class Store{
         if(FindItemByName(itemName) != null){  
             warehouse.Remove(itemName);
             // volume--;
-            Console.WriteLine("Item deleted");
         }else{
             Console.WriteLine($"No item founded");
         }
@@ -63,20 +62,28 @@ class Store{
     public Item? FindItemByName(Item itemName){
         return warehouse.FirstOrDefault(item => item.Name == itemName.Name);
     }
-    public List<Item> SortByNameAsc(){
-    //return a list    
-        var storedItems = warehouse.OrderBy(i => i.Name);
-        return  storedItems.ToList();
+    public List<Item> SortByNameAsc(){   
+        return warehouse.OrderBy(i => i.Name).ToList();    
     }
-
     public List<Item> SortByDate(SortType type){
         if(type == SortType.asc){
-        return warehouse.OrderBy(i => i.Date).ToList();           
+        return [.. warehouse.OrderBy(i => i.Date)];           
         }else{
         return warehouse.OrderByDescending(i => i.Date).ToList();      
         }
     }
-}
+    public void GroupByDate(){
+        var dateForLastThreeMonths =  DateTime.Now.AddMonths(-3);
+        var dateList = warehouse.GroupBy(i => i.Date >= dateForLastThreeMonths);
+        Console.WriteLine("Old Items:");
+        foreach (var item in dateList){
+            if (item.Key){
+            Console.WriteLine($"New Arrival:");
+            }
+        foreach (var i in item){
+            Console.WriteLine($" - {i.Name}, Created: {i.Date.ToShortDateString()}");
+        }}
+        }
 
 
 
@@ -98,6 +105,7 @@ class Program{
         var sunscreen = new Item("Sunscreen", 8);
         s.AddItem(sunscreen);
 
+        Console.WriteLine($"{waterBottle.Name} delete:");
         s.DeleteItem(waterBottle);
 
         s.GetCurrentVolume();
@@ -113,9 +121,12 @@ class Program{
         Console.WriteLine("Sorted Items:");
         sortedItems.ForEach(i => i.PrintItemInfoSorted());
 
-        var sorteDate = s.SortByDate(SortType.desc);
+        var sorteDate = s.SortByDate(SortType.asc);
+        Console.WriteLine("Sorted Items By Date:");
         sorteDate.ForEach(i => i.PrintItemInfoSorted());
 
-
+        s.GroupByDate();
+        
+ 
     }
-}
+}}
