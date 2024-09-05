@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Reflection;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 class Item{
@@ -38,29 +39,32 @@ class Store{
         get{ return maximumCapacity; }
         }
     public void AddItem(Item itemName){
-        if(FindItemByName(itemName) != null){
-            Console.WriteLine($"Repeated item name");
+        if(FindItemByName(itemName.Name) != null){
+            Console.WriteLine($""); 
+            throw new Exception("Repeated item name");
         }else if(maximumCapacity < warehouse.Count){
-            Console.WriteLine($"Wrong capacity");
+            Console.WriteLine($""); 
+            throw new ArgumentException("Capacity is full");
         }else{
             warehouse.Add(itemName);
             // volume++; 
-            Console.WriteLine("Item added");
+            Console.WriteLine("Item added.");
         }
     } 
     public void DeleteItem(Item itemName){
-        if(FindItemByName(itemName) != null){  
+        if(FindItemByName(itemName.Name) != null){  
             warehouse.Remove(itemName);
+            Console.WriteLine($"{itemName.Name} deleted");
             // volume--;
         }else{
-            Console.WriteLine($"No item founded");
+            throw new Exception("No item founded");
         }
     } 
     public void GetCurrentVolume(){
         Console.WriteLine($"Total quantity of items in the warehouse: {warehouse.Sum(i=> i.Quantity)}");
     } 
-    public Item? FindItemByName(Item itemName){
-        return warehouse.FirstOrDefault(item => item.Name == itemName.Name);
+    public Item? FindItemByName(string itemName){
+        return warehouse.FirstOrDefault(item => item.Name == itemName);       
     }
     public List<Item> SortByNameAsc(){   
         return warehouse.OrderBy(i => i.Name).ToList();    
@@ -78,19 +82,18 @@ class Store{
         Console.WriteLine("Old Items:");
         foreach (var item in dateList){
             if (item.Key){
-            Console.WriteLine($"New Arrival:");
+             Console.WriteLine($"New Arrival:");
             }
         foreach (var i in item){
             Console.WriteLine($" - {i.Name}, Created: {i.Date.ToShortDateString()}");
         }}
-        }
-
-
+    }
 
 class Program{
     public static void Main(string[] args)
     {
-        Store s =new Store(10);
+        try{
+            Store s =new Store(4);        
         
         var waterBottle = new Item("Water Bottle", 10, new DateTime(2023, 1, 1));
         s.AddItem(waterBottle);
@@ -104,17 +107,16 @@ class Program{
         s.AddItem(umbrella);
         var sunscreen = new Item("Sunscreen", 8);
         s.AddItem(sunscreen);
-
-        Console.WriteLine($"{waterBottle.Name} delete:");
+        
         s.DeleteItem(waterBottle);
 
         s.GetCurrentVolume();
 
-        Item? foundItem = s.FindItemByName(umbrella);
+        Item? foundItem = s.FindItemByName("Sunscreen");
         if(foundItem != null){
             foundItem.PrintItemInfo();
         }else{
-            Console.WriteLine("empty input");
+            throw new Exception($"The {foundItem} item not in the list");
         }
 
         var sortedItems = s.SortByNameAsc();
@@ -126,7 +128,9 @@ class Program{
         sorteDate.ForEach(i => i.PrintItemInfoSorted());
 
         s.GroupByDate();
-        
+        }catch(FormatException fe){
+            Console.WriteLine($"{fe}");        
+        }
  
     }
 }}
